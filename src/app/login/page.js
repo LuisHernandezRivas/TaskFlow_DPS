@@ -23,7 +23,7 @@ export default function LoginPage() {
           </Link>
         </form>
 
-        {/* Creamos el enlace para registrarse */}
+        {/* Creamos eel enlace para registrarse */}
         <p className="text-sm text-center text-gray-600 mt-6">
           ¿No tienes cuenta?{' '}
           <Link href="/registro" className="text-blue-600 hover:underline font-semibold">
