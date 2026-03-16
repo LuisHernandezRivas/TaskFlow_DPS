@@ -1,5 +1,7 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import {AuthContext } from '../../context/AuthContext';
+import { useRouter } fro 'next/navigation';
 
 // Importacion de los componentes que conforman el dashboard
 import Navbar from '../../components/Navbar';
@@ -13,6 +15,15 @@ export default function DashboardPage() {
  // Estados para controlar la visibilidad de los modales
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
+
+ const { user } = useContext(AuthContext);
+ const router = useRouter();
+
+ useEffect(() => {
+  if (!user) {
+   router.push("/login");
+  }
+ }, [user]);
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans relative">
@@ -28,13 +39,16 @@ export default function DashboardPage() {
             <h2 className="text-3xl font-bold text-gray-800">Dashboard de Proyectos</h2>
             <p className="text-gray-500 mt-1">Gestiona tus proyectos y tareas asignadas.</p>
           </div>
-          <button 
-            onClick={() => setShowProjectModal(true)}
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-200"
-          >
-            + Nuevo Proyecto
-          </button>
-        </div>
+          {user?.role === "gerente" && (
+  <button 
+    onClick={() => setShowProjectModal(true)}
+    className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-200"
+  >
+    + Nuevo Proyecto
+  </button>
+)}
+
+</div>
 
         {/* 2. Insertamos la barra de progreso */}
         <ProgressBar progreso={75} />
