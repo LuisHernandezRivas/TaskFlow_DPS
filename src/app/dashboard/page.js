@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useContext } from 'react';
 import {AuthContext } from '../../context/AuthContext';
-import { useRouter } fro 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 // Importacion de los componentes que conforman el dashboard
 import Navbar from '../../components/Navbar';
