@@ -1,0 +1,18 @@
+{
+  "users": [
+    { "id": 1, "nombre": "Tatiana García", "email": "gerente@taskudb.com", "password": "1234", "role": "gerente" },
+    { "id": 2, "nombre": "Vladi Pérez", "email": "usuario@taskudb.com", "password": "1234", "role": "usuario" },
+    { "id": 3, "nombre": "Luis López", "email": "maria@taskudb.com", "password": "1234", "role": "usuario" }
+  ],
+  "projects": [
+    { "id": 1, "nombre": "App Móvil Comunitaria", "descripcion": "Desarrollo de aplicación móvil para la comunidad local", "estado": "En progreso" },
+    { "id": 2, "nombre": "Portal Web Institucional", "descripcion": "Rediseño del sitio web institucional", "estado": "Pendiente" },
+    { "id": 3, "nombre": "Portal Web Envio de correos masivos", "descripcion": "Envio de correos de forma masiva a receptores", "estado": "Pendiente" }
+
+  ],
+  "tasks": [
+    { "id": 1, "titulo": "Diseñar Mockups Figma", "projectId": 1, "assignedTo": 2, "estado": "Pendiente" },
+    { "id": 2, "titulo": "Configurar base de datos", "projectId": 1, "assignedTo": 3, "estado": "En Progreso" },
+    { "id": 3, "titulo": "Crear wireframes", "projectId": 2, "assignedTo": 2, "estado": "Pendiente" }
+  ]
+}
