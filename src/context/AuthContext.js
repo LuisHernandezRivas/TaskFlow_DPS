@@ -16,6 +16,10 @@ export function AuthProvider({ children }) {
     localStorage.setItem("session", JSON.stringify(userData));
     setUser(userData);
   };
+  const logout = () => {
+    localStorage.removeItem("session");
+    setUser(null);
+  };
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
       {children}
