@@ -19,16 +19,18 @@ export default function DashboardPage() {
  const { user } = useContext(AuthContext);
  const router = useRouter();
 
+ // Protegemos la ruta del dashboard para que solo usuarios autenticados puedan acceder
  useEffect(() => {
-  if (!user) {
-   router.push("/login");
-  }
- }, [user]);
+  const sessionGuardada = localStorage.getItem("session");
+  if (!user && !sessionGuardada) {
+      router.push("/login");
+    }
+  }, [user, router]);
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans relative">
       
-      {/* 1. Insertamos la barra de navegación */}
+      {/* Barra de navegación */}
       <Navbar />
 
       <main className="p-6 max-w-6xl mx-auto space-y-8 mt-4">
@@ -47,7 +49,7 @@ export default function DashboardPage() {
     + Nuevo Proyecto
   </button>
 )}
-
+ 
 </div>
 
         {/* 2. Insertamos la barra de progreso */}
