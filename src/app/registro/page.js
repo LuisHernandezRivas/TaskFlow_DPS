@@ -1,5 +1,35 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from 'next/link';
 import InputField from '../../components/auth/InputField';
+
+const router = useRouter();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("usuario");
+
+  const handleRegister = () => {
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+
+    const newUser = {
+      name,
+      email,
+      password,
+      role
+    };
+
+    users.push(newUser);
+
+    localStorage.setItem("users", JSON.stringify(users));
+
+    alert("Usuario registrado correctamente");
+
+    router.push("/login");
+  };
 
 export default function RegisterPage() {
   return (
