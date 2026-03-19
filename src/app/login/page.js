@@ -1,7 +1,28 @@
+"use client";
+import { useState, useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
+import { useRouter } from "next/navigation";
 import Link from 'next/link';
 import InputField from '../../components/auth/InputField';
 
 export default function LoginPage() {
+  const { login } = useContext(AuthContext);
+  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const handleLogin = () => {
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const userFound = users.find(
+      u => u.email === email && u.password === password
+        );
+    if (userFound) {
+      login(userFound) {
+        login(userFound);
+        router.push("/dashboard");
+      }
+    };
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 font-sans">
       <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
