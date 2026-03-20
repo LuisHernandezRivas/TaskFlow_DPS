@@ -8,7 +8,7 @@ export default function ProgressBar({ progreso }) {
           style={{ width: `${progreso}%` }}
         ></div>
       </div>
-      <p className="text-sm text-gray-500 mt-2 font-medium">{progreso}% de tareas completadas este mes</p>
+      <p className="text-sm text-gray-500 mt-2 font-medium">{progreso}% de proyectos completados</p>
     </div>
   );
 }
