@@ -1,29 +1,27 @@
 "use client";
-import { useState, useEffect, useContext, useMemo } from 'react';
-import {AuthContext } from '../../context/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useContext, useMemo } from "react";
+import { AuthContext } from "../../context/AuthContext";
+import { useRouter } from "next/navigation";
 
-// Importacion de los componentes que conforman el dashboard
-import Navbar from '../../components/Navbar';
-import ProgressBar from '../../components/ProgressBar';
-import ProjectList from '../../components/ProjectList';
-import TaskList from '../../components/TaskList';
-import ProjectModal from '../../components/modals/ProjectModal';
-import TaskModal from '../../components/modals/TaskModal';
+import Navbar from "../../components/Navbar";
+import ProgressBar from "../../components/ProgressBar";
+import ProjectList from "../../components/ProjectList";
+import TaskList from "../../components/TaskList";
+import ProjectModal from "../../components/modals/ProjectModal";
+import TaskModal from "../../components/modals/TaskModal";
 
-const DEFAULT_PROJECTS = [
-  {
-    id: 1,
-    nombre: "App Móvil Comunitaria",
-    descripcion: "Plataforma para gestionar servicios comunitarios.",
-    estado: "En progreso",
-  },
-];
-
-const DEFAULT_TASKS = [];
+import {
+  getProjects,
+  createProject,
+  updateProject,
+  deleteProject,
+  deleteTasksByProject,
+  getTasks,
+  createTask,
+  updateTask,
+} from "../../services/api";
 
 export default function DashboardPage() {
- // Estados para controlar la visibilidad de los modales
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [projects, setProjects] = useState([]);
@@ -36,35 +34,35 @@ export default function DashboardPage() {
   const [taskSearch, setTaskSearch] = useState("");
   const [taskStatusFilter, setTaskStatusFilter] = useState("Todos");
   const [taskPriorityFilter, setTaskPriorityFilter] = useState("Todas");
+  const [apiError, setApiError] = useState("");
 
- const { user } = useContext(AuthContext);
- const router = useRouter();
+  const { user } = useContext(AuthContext);
+  const router = useRouter();
 
- // Protegemos la ruta del dashboard para que solo usuarios autenticados puedan acceder
- useEffect(() => {
-  const sessionGuardada = localStorage.getItem("session");
-  if (!user && !sessionGuardada) {
+  // Proteger ruta
+  useEffect(() => {
+    const session = sessionStorage.getItem("session");
+    if (!user && !session) {
       router.push("/login");
     }
   }, [user, router]);
 
+  // Cargar datos desde la API al montar
   useEffect(() => {
-    const savedProjects = JSON.parse(localStorage.getItem("projects"));
-    if (savedProjects && Array.isArray(savedProjects)) {
-      setProjects(savedProjects);
-    } else {
-      setProjects(DEFAULT_PROJECTS);
-      localStorage.setItem("projects", JSON.stringify(DEFAULT_PROJECTS));
+    async function loadData() {
+      try {
+        const [proj, task] = await Promise.all([getProjects(), getTasks()]);
+        setProjects(proj);
+        setTasks(task);
+        setApiError("");
+      } catch {
+        setApiError("No se pudo conectar con el servidor. Verifica que json-server esté corriendo en el puerto 3001.");
+      }
     }
-
-    const savedTasks = JSON.parse(localStorage.getItem("tasks"));
-    if (savedTasks && Array.isArray(savedTasks)) {
-      setTasks(savedTasks);
-      return;
-    }
-    setTasks(DEFAULT_TASKS);
-    localStorage.setItem("tasks", JSON.stringify(DEFAULT_TASKS));
+    loadData();
   }, []);
+
+  // ── Proyectos ─────────────────────────────────
 
   const openCreateProjectModal = () => {
     setProjectToEdit(null);
@@ -72,45 +70,38 @@ export default function DashboardPage() {
   };
 
   const openEditProjectModal = (projectId) => {
-    const projectFound = projects.find((project) => project.id === projectId);
-    if (!projectFound) return;
-    setProjectToEdit(projectFound);
+    const found = projects.find((p) => p.id === projectId);
+    if (!found) return;
+    setProjectToEdit(found);
     setShowProjectModal(true);
   };
 
-  const saveProjects = (nextProjects) => {
-    setProjects(nextProjects);
-    localStorage.setItem("projects", JSON.stringify(nextProjects));
-  };
-
-  const handleSaveProject = (projectData) => {
-    // No guardamos el estado - será calculado dinámicamente
+  const handleSaveProject = async (projectData) => {
     const { estado, ...dataWithoutStatus } = projectData;
-    
-    if (projectToEdit) {
-      const updatedProjects = projects.map((project) =>
-        project.id === projectToEdit.id
-          ? { ...project, ...dataWithoutStatus }
-          : project
-      );
-      saveProjects(updatedProjects);
-      return;
+    try {
+      if (projectToEdit) {
+        const updated = await updateProject(projectToEdit.id, dataWithoutStatus);
+        setProjects((prev) =>
+          prev.map((p) => (p.id === projectToEdit.id ? { ...p, ...updated } : p))
+        );
+      } else {
+        const created = await createProject(dataWithoutStatus);
+        setProjects((prev) => [...prev, created]);
+      }
+    } catch {
+      alert("Error al guardar el proyecto. Verifica la conexión con el servidor.");
     }
-
-    const newProject = {
-      id: Date.now(),
-      ...dataWithoutStatus,
-    };
-    saveProjects([...projects, newProject]);
   };
 
-  const handleDeleteProject = (projectId) => {
-    const updatedProjects = projects.filter((project) => project.id !== projectId);
-    saveProjects(updatedProjects);
-
-    const updatedTasks = tasks.filter((task) => task.projectId !== projectId);
-    setTasks(updatedTasks);
-    localStorage.setItem("tasks", JSON.stringify(updatedTasks));
+  const handleDeleteProject = async (projectId) => {
+    try {
+      await deleteTasksByProject(projectId);
+      await deleteProject(projectId);
+      setProjects((prev) => prev.filter((p) => p.id !== projectId));
+      setTasks((prev) => prev.filter((t) => t.projectId !== projectId));
+    } catch {
+      alert("Error al eliminar el proyecto.");
+    }
   };
 
   const handleCloseProjectModal = () => {
@@ -118,26 +109,25 @@ export default function DashboardPage() {
     setProjectToEdit(null);
   };
 
+  // ── Tareas ────────────────────────────────────
+
   const openTaskModal = (projectId) => {
-    const projectFound = projects.find((project) => project.id === projectId);
-    if (!projectFound) return;
+    const found = projects.find((p) => p.id === projectId);
+    if (!found) return;
     setTaskToEdit(null);
-    setSelectedProjectForTask(projectFound);
+    setSelectedProjectForTask(found);
     setShowTaskModal(true);
   };
 
   const openEditTaskModal = (taskId) => {
-    const taskFound = tasks.find((task) => task.id === taskId);
-    if (!taskFound) return;
-
-    const projectFound = projects.find((project) => project.id === taskFound.projectId);
-    const projectForTask = projectFound || {
-      id: taskFound.projectId,
-      nombre: taskFound.projectName,
+    const found = tasks.find((t) => t.id === taskId);
+    if (!found) return;
+    const proj = projects.find((p) => p.id === found.projectId) || {
+      id: found.projectId,
+      nombre: found.projectName,
     };
-
-    setTaskToEdit(taskFound);
-    setSelectedProjectForTask(projectForTask);
+    setTaskToEdit(found);
+    setSelectedProjectForTask(proj);
     setShowTaskModal(true);
   };
 
@@ -147,43 +137,52 @@ export default function DashboardPage() {
     setTaskToEdit(null);
   };
 
-  const handleSaveTask = (taskData) => {
-    if (taskToEdit) {
-      const nextTasks = tasks.map((task) =>
-        task.id === taskToEdit.id
-          ? { ...task, ...taskData, id: taskToEdit.id }
-          : task
-      );
-      setTasks(nextTasks);
-      localStorage.setItem("tasks", JSON.stringify(nextTasks));
-      return;
+  const handleSaveTask = async (taskData) => {
+    try {
+      if (taskToEdit) {
+        const updated = await updateTask(taskToEdit.id, { ...taskData, id: taskToEdit.id });
+        setTasks((prev) =>
+          prev.map((t) => (t.id === taskToEdit.id ? { ...t, ...updated } : t))
+        );
+      } else {
+        const created = await createTask(taskData);
+        setTasks((prev) => [...prev, created]);
+      }
+    } catch {
+      alert("Error al guardar la tarea. Verifica la conexión con el servidor.");
     }
-
-    const newTask = {
-      id: Date.now(),
-      ...taskData,
-    };
-
-    const nextTasks = [...tasks, newTask];
-    setTasks(nextTasks);
-    localStorage.setItem("tasks", JSON.stringify(nextTasks));
   };
 
-  const handleUpdateTaskStatus = (taskId, estado) => {
-    const nextTasks = tasks.map((task) =>
-      task.id === taskId ? { ...task, estado } : task
-    );
-    setTasks(nextTasks);
-    localStorage.setItem("tasks", JSON.stringify(nextTasks));
+  const handleUpdateTaskStatus = async (taskId, estado) => {
+    try {
+      const updated = await updateTask(taskId, { estado });
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, ...updated } : t))
+      );
+    } catch {
+      alert("Error al actualizar el estado de la tarea.");
+    }
   };
 
-  const filteredProjects = useMemo(() => {
-    return projects.filter((project) => {
-      const byName = project.nombre.toLowerCase().includes(projectSearch.toLowerCase());
-      const byStatus = projectStatusFilter === "Todos" || project.estado === projectStatusFilter;
-      return byName && byStatus;
-    });
-  }, [projects, projectSearch, projectStatusFilter]);
+  // ── Lógica derivada (igual que el original) ───
+
+  const calculateProjectState = (projectId) => {
+    const projectTasks = tasks.filter((t) => t.projectId === projectId);
+    if (projectTasks.length === 0) return "Pendiente";
+    if (projectTasks.some((t) => t.estado === "Pendiente")) return "Pendiente";
+    if (projectTasks.some((t) => t.estado === "En progreso")) return "En progreso";
+    return "Completado";
+  };
+
+  const projectsWithCalculatedState = useMemo(
+    () => projects.map((p) => ({ ...p, estado: calculateProjectState(p.id) })),
+    [projects, tasks]
+  );
+
+  const isAssignedToUser = (task) => {
+    if (Array.isArray(task.assignedToEmails)) return task.assignedToEmails.includes(user?.email);
+    return task.assignedToEmail === user?.email;
+  };
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
@@ -194,144 +193,87 @@ export default function DashboardPage() {
     });
   }, [tasks, taskSearch, taskStatusFilter, taskPriorityFilter]);
 
-  const isAssignedToUser = (task) => {
-    if (Array.isArray(task.assignedToEmails)) {
-      return task.assignedToEmails.includes(user?.email);
-    }
-    return task.assignedToEmail === user?.email;
-  };
-
-  // Calcular el estado dinámico de cada proyecto basado en sus tareas
-  const calculateProjectState = (projectId) => {
-    const projectTasks = tasks.filter((task) => task.projectId === projectId);
-    
-    if (projectTasks.length === 0) {
-      return "Pendiente";
-    }
-    
-    // Si hay al menos una tarea en "Pendiente", el proyecto es "Pendiente"
-    if (projectTasks.some((t) => t.estado === "Pendiente")) {
-      return "Pendiente";
-    }
-    
-    // Si hay al menos una tarea en "En progreso", el proyecto es "En progreso"
-    if (projectTasks.some((t) => t.estado === "En progreso")) {
-      return "En progreso";
-    }
-    
-    // Si todas las tareas son "Completado", el proyecto es "Completado"
-    return "Completado";
-  };
-
-  // Enriquecer TODOS los proyectos con estados calculados dinámicamente
-  const projectsWithCalculatedState = useMemo(() => {
-    return projects.map((project) => ({
-      ...project,
-      estado: calculateProjectState(project.id),
-    }));
-  }, [projects, tasks]);
-
-  // Filtrar proyectos por búsqueda y estado (usando estados calculados)
   const filteredProjectsWithState = useMemo(() => {
-    return projectsWithCalculatedState.filter((project) => {
-      const byName = project.nombre.toLowerCase().includes(projectSearch.toLowerCase());
-      const byStatus = projectStatusFilter === "Todos" || project.estado === projectStatusFilter;
+    return projectsWithCalculatedState.filter((p) => {
+      const byName = p.nombre.toLowerCase().includes(projectSearch.toLowerCase());
+      const byStatus = projectStatusFilter === "Todos" || p.estado === projectStatusFilter;
       return byName && byStatus;
     });
   }, [projectsWithCalculatedState, projectSearch, projectStatusFilter]);
 
   const projectsForDisplay = useMemo(() => {
-    if (user?.role === "gerente") {
-      return filteredProjectsWithState;
-    }
-
+    if (user?.role === "gerente") return filteredProjectsWithState;
     const userTaskProjectIds = new Set(
-      filteredTasks.filter((task) => isAssignedToUser(task)).map((task) => task.projectId)
+      filteredTasks.filter(isAssignedToUser).map((t) => t.projectId)
     );
-
-    return filteredProjectsWithState.filter((project) => userTaskProjectIds.has(project.id));
+    return filteredProjectsWithState.filter((p) => userTaskProjectIds.has(p.id));
   }, [filteredProjectsWithState, filteredTasks, user]);
 
   const progresoProyectos = useMemo(() => {
     const projToUse = user?.role === "gerente" ? projectsWithCalculatedState : projectsForDisplay;
-    
     if (projToUse.length === 0) return 0;
-
-    const estadoToProgreso = {
-      "Pendiente": 0,
-      "En progreso": 50,
-      "Completado": 100,
-    };
-
-    const total = projToUse.reduce((acumulado, project) => {
-      return acumulado + (estadoToProgreso[project.estado] ?? 0);
-    }, 0);
-
+    const estadoToProgreso = { Pendiente: 0, "En progreso": 50, Completado: 100 };
+    const total = projToUse.reduce((acc, p) => acc + (estadoToProgreso[p.estado] ?? 0), 0);
     return Math.round(total / projToUse.length);
-  }, [projects, projectsForDisplay, user, projectsWithCalculatedState, tasks]);
+  }, [projectsWithCalculatedState, projectsForDisplay, user, tasks]);
 
   const kpis = useMemo(() => {
     const isManager = user?.role === "gerente";
-
-    const isAssignedToUserLocal = (task) => {
-      if (Array.isArray(task.assignedToEmails)) {
-        return task.assignedToEmails.includes(user?.email);
-      }
-      return task.assignedToEmail === user?.email;
-    };
-
-    const userTasks = isManager ? tasks : tasks.filter((task) => isAssignedToUserLocal(task));
-    const userProjectIds = new Set(userTasks.map((task) => task.projectId));
-    const userProjects = isManager ? projectsWithCalculatedState : projectsWithCalculatedState.filter((project) => userProjectIds.has(project.id));
-
-    const proyectosActivosTotal = projectsWithCalculatedState.filter((project) => project.estado !== "Completado").length;
-    const tareasPendientes = userTasks.filter((task) => task.estado !== "Completado").length;
-    const tareasCompletadas = userTasks.filter((task) => task.estado === "Completado").length;
+    const userTasks = isManager ? tasks : tasks.filter(isAssignedToUser);
+    const userProjectIds = new Set(userTasks.map((t) => t.projectId));
+    const userProjects = isManager
+      ? projectsWithCalculatedState
+      : projectsWithCalculatedState.filter((p) => userProjectIds.has(p.id));
 
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
-    const tareasVencidas = userTasks.filter((task) => {
-      if (!task.fechaLimite || task.estado === "Completado") return false;
-      const limite = new Date(`${task.fechaLimite}T00:00:00`);
-      return limite < hoy;
-    }).length;
 
     return {
-      proyectosActivos: isManager ? proyectosActivosTotal : userProjects.filter((p) => p.estado !== "Completado").length,
-      tareasPendientes,
-      tareasCompletadas,
-      tareasVencidas,
+      proyectosActivos: isManager
+        ? projectsWithCalculatedState.filter((p) => p.estado !== "Completado").length
+        : userProjects.filter((p) => p.estado !== "Completado").length,
+      tareasPendientes: userTasks.filter((t) => t.estado !== "Completado").length,
+      tareasCompletadas: userTasks.filter((t) => t.estado === "Completado").length,
+      tareasVencidas: userTasks.filter((t) => {
+        if (!t.fechaLimite || t.estado === "Completado") return false;
+        return new Date(`${t.fechaLimite}T00:00:00`) < hoy;
+      }).length,
     };
-  }, [projects, tasks, user, projectsWithCalculatedState]);
+  }, [tasks, user, projectsWithCalculatedState]);
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans relative">
-      
-      {/* Barra de navegación */}
       <Navbar />
 
       <main className="p-6 max-w-6xl mx-auto space-y-8 mt-4">
-        
-        {/* Encabezado Principal */}
+
+        {/* Error de API */}
+        {apiError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-5 py-4">
+            ⚠️ {apiError}
+          </div>
+        )}
+
+        {/* Encabezado */}
         <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div>
             <h2 className="text-3xl font-bold text-gray-800">Dashboard de Proyectos</h2>
             <p className="text-gray-500 mt-1">Gestiona tus proyectos y tareas asignadas.</p>
           </div>
           {user?.role === "gerente" && (
-  <button 
-    onClick={openCreateProjectModal}
-    className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-200"
-  >
-    + Nuevo Proyecto
-  </button>
-)}
- 
-</div>
+            <button
+              onClick={openCreateProjectModal}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-200"
+            >
+              + Nuevo Proyecto
+            </button>
+          )}
+        </div>
 
-        {/* 2. Insertamos la barra de progreso */}
+        {/* Barra de progreso */}
         <ProgressBar progreso={progresoProyectos} />
 
+        {/* KPIs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
             <p className="text-sm text-gray-500 font-medium">Proyectos Activos</p>
@@ -351,55 +293,38 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Filtros */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
           <h3 className="text-lg font-bold text-gray-700">Búsqueda y Filtros</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <p className="text-sm font-semibold text-gray-600">Proyectos</p>
-              <input
-                type="text"
-                placeholder="Buscar proyecto..."
-                value={projectSearch}
+              <input type="text" placeholder="Buscar proyecto..." value={projectSearch}
                 onChange={(e) => setProjectSearch(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg"
-              />
-              <select
-                value={projectStatusFilter}
-                onChange={(e) => setProjectStatusFilter(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg bg-white"
-              >
+                className="w-full px-4 py-2 border rounded-lg" />
+              <select value={projectStatusFilter} onChange={(e) => setProjectStatusFilter(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg bg-white">
                 <option value="Todos">Todos los estados</option>
                 <option value="Pendiente">Pendiente</option>
                 <option value="En progreso">En progreso</option>
                 <option value="Completado">Completado</option>
               </select>
             </div>
-
             <div className="space-y-3">
               <p className="text-sm font-semibold text-gray-600">Tareas</p>
-              <input
-                type="text"
-                placeholder="Buscar tarea..."
-                value={taskSearch}
+              <input type="text" placeholder="Buscar tarea..." value={taskSearch}
                 onChange={(e) => setTaskSearch(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg"
-              />
+                className="w-full px-4 py-2 border rounded-lg" />
               <div className="grid grid-cols-2 gap-3">
-                <select
-                  value={taskStatusFilter}
-                  onChange={(e) => setTaskStatusFilter(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-lg bg-white"
-                >
+                <select value={taskStatusFilter} onChange={(e) => setTaskStatusFilter(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg bg-white">
                   <option value="Todos">Todos los estados</option>
                   <option value="Pendiente">Pendiente</option>
                   <option value="En progreso">En progreso</option>
                   <option value="Completado">Completado</option>
                 </select>
-                <select
-                  value={taskPriorityFilter}
-                  onChange={(e) => setTaskPriorityFilter(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-lg bg-white"
-                >
+                <select value={taskPriorityFilter} onChange={(e) => setTaskPriorityFilter(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg bg-white">
                   <option value="Todas">Todas las prioridades</option>
                   <option value="Alta">Alta</option>
                   <option value="Media">Media</option>
@@ -410,10 +335,9 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* 3. Insertamos las listas en sus columnas */}
+        {/* Listas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Insertamos la lista de proyectos */}
-          <ProjectList 
+          <ProjectList
             projects={projectsForDisplay}
             onAbrirModalProyecto={openEditProjectModal}
             onAbrirModalTarea={openTaskModal}
@@ -428,7 +352,6 @@ export default function DashboardPage() {
         </div>
       </main>
 
-      {/* 4. Ventanas que se muestran según el estado */}
       {showProjectModal && (
         <ProjectModal
           onClose={handleCloseProjectModal}
@@ -445,7 +368,6 @@ export default function DashboardPage() {
           initialData={taskToEdit}
         />
       )}
-
     </div>
   );
 }

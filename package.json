@@ -6,20 +6,21 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "api": "json-server --watch db.json --port 3001",
+    "dev:full": "concurrently \"npm run api\" \"npm run dev\""
   },
   "dependencies": {
     "next": "16.1.6",
     "primeicons": "^7.0.0",
     "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "api": "json-server --watch db.json --port 3001",
-    "dev:all": "concurrently \"npm run dev\" \"npm run api\""
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "json-server": "^1.0.0-beta.14",
     "tailwindcss": "^4"
   }
 }
