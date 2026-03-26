@@ -1,18 +1,132 @@
 {
   "users": [
-    { "id": 1, "nombre": "Tatiana García", "email": "gerente@taskudb.com", "password": "1234", "role": "gerente" },
-    { "id": 2, "nombre": "Vladi Pérez", "email": "usuario@taskudb.com", "password": "1234", "role": "usuario" },
-    { "id": 3, "nombre": "Luis López", "email": "luis@taskudb.com", "password": "1234", "role": "usuario" }
+    {
+      "id": "1",
+      "nombre": "Tatiana García",
+      "email": "gerente@taskudb.com",
+      "password": "1234",
+      "role": "gerente"
+    },
+    {
+      "id": "2",
+      "nombre": "Vladi Pérez",
+      "email": "usuario@taskudb.com",
+      "password": "1234",
+      "role": "usuario"
+    },
+    {
+      "id": "3",
+      "nombre": "Luis López",
+      "email": "luis@taskudb.com",
+      "password": "1234",
+      "role": "usuario"
+    }
   ],
   "projects": [
-    { "id": 1, "nombre": "App Móvil Comunitaria", "descripcion": "Desarrollo de aplicación móvil para la comunidad local", "estado": "En progreso" },
-    { "id": 2, "nombre": "Portal Web Institucional", "descripcion": "Rediseño del sitio web institucional", "estado": "Pendiente" },
-    { "id": 3, "nombre": "Portal Web Envio de correos masivos", "descripcion": "Envio de correos de forma masiva a receptores", "estado": "Pendiente" }
+    {
+      "id": "1",
+      "nombre": "App Móvil Comunitaria",
+      "descripcion": "Desarrollo de aplicación móvil para la comunidad local",
+      "estado": "En progreso"
+    },
+    {
+      "id": "2",
+      "nombre": "Portal Web Institucional",
+      "descripcion": "Rediseño del sitio web institucional",
+      "estado": "Pendiente"
+    },
+    {
+      "id": "3",
+      "nombre": "Portal Web Envio de correos masivos",
+      "descripcion": "Envio de correos de forma masiva a receptores",
+      "estado": "Pendiente"
+    },
+    {
+      "nombre": "ERP Sistema de salud",
+      "descripcion": "Crear aplicativo para llevar el control de finanzas y compras de la institucion",
+      "id": "EWtWAjXy6jc"
+    }
   ],
   "tasks": [
-    { "id": 1, "titulo": "Diseñar Mockups Figma", "projectId": 1, "projectName": "App Móvil Comunitaria", "assignedTo": 2, "assignedToEmails": ["usuario@taskudb.com"], "assignedToNames": ["Vladi Pérez"], "estado": "Pendiente", "prioridad": "Media", "fechaLimite": "" },
-    { "id": 2, "titulo": "Configurar base de datos", "projectId": 1, "projectName": "App Móvil Comunitaria", "assignedTo": 3, "assignedToEmails": ["maria@taskudb.com"], "assignedToNames": ["Luis López"], "estado": "En progreso", "prioridad": "Alta", "fechaLimite": "" },
-    { "id": 3, "titulo": "Crear wireframes", "projectId": 2, "projectName": "Portal Web Institucional", "assignedTo": 2, "assignedToEmails": ["usuario@taskudb.com"], "assignedToNames": ["Vladi Pérez"], "estado": "Pendiente", "prioridad": "Media", "fechaLimite": "" },
-    { "id": 4, "titulo": "Diseñar Portal web para validar UUIDs", "projectId": 3, "projectName": "Portal Web Envio de correos masivos", "assignedTo": 2, "assignedToEmails": ["luis@taskudb.com"], "assignedToNames": ["Luis López"], "estado": "Pendiente", "prioridad": "Media", "fechaLimite": "" }
-  ]
+    {
+      "id": "1",
+      "titulo": "Diseñar Mockups Figma",
+      "projectId": 1,
+      "projectName": "App Móvil Comunitaria",
+      "assignedTo": 2,
+      "assignedToEmails": [
+        "usuario@taskudb.com"
+      ],
+      "assignedToNames": [
+        "Vladi Pérez"
+      ],
+      "estado": "Pendiente",
+      "prioridad": "Media",
+      "fechaLimite": ""
+    },
+    {
+      "id": "2",
+      "titulo": "Configurar base de datos",
+      "projectId": 1,
+      "projectName": "App Móvil Comunitaria",
+      "assignedTo": 3,
+      "assignedToEmails": [
+        "maria@taskudb.com"
+      ],
+      "assignedToNames": [
+        "Luis López"
+      ],
+      "estado": "En progreso",
+      "prioridad": "Alta",
+      "fechaLimite": ""
+    },
+    {
+      "id": "3",
+      "titulo": "Crear wireframes",
+      "projectId": 2,
+      "projectName": "Portal Web Institucional",
+      "assignedTo": 2,
+      "assignedToEmails": [
+        "usuario@taskudb.com"
+      ],
+      "assignedToNames": [
+        "Vladi Pérez"
+      ],
+      "estado": "Pendiente",
+      "prioridad": "Media",
+      "fechaLimite": ""
+    },
+    {
+      "id": "4",
+      "titulo": "Diseñar Portal web para validar UUIDs",
+      "projectId": 3,
+      "projectName": "Portal Web Envio de correos masivos",
+      "assignedTo": 2,
+      "assignedToEmails": [
+        "luis@taskudb.com"
+      ],
+      "assignedToNames": [
+        "Luis López"
+      ],
+      "estado": "Pendiente",
+      "prioridad": "Media",
+      "fechaLimite": ""
+    },
+    {
+      "titulo": "Sistema FEL",
+      "estado": "Pendiente",
+      "prioridad": "Media",
+      "fechaLimite": "2026-03-31",
+      "projectId": "EWtWAjXy6jc",
+      "projectName": "ERP Sistema de salud",
+      "assignedToEmails": [
+        "luis@taskudb.com"
+      ],
+      "assignedToNames": [
+        null
+      ],
+      "id": "DjJ6VIiPBtA"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
 }

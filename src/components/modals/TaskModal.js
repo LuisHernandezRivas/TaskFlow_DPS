@@ -9,22 +9,7 @@ export default function TaskModal({ onClose, onSave, selectedProject, currentUse
   const [usuarios, setUsuarios] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
 
-// ANTES — leía de localStorage
-useEffect(() => {
-  const savedUsers = JSON.parse(localStorage.getItem("users")) || [];
-  const usuariosRol = savedUsers.filter((user) => user.role === "usuario");
-  if (currentUser?.email) {
-    const yaExiste = usuariosRol.some((user) => user.email === currentUser.email);
-    if (!yaExiste) {
-      usuariosRol.push({
-        name: currentUser.name || "Gerente",
-        email: currentUser.email,
-        role: currentUser.role,
-      });
-    }
-  }
-  setUsuarios(usuariosRol);
-}, [currentUser]);
+
 
 // DESPUÉS — líneas 14 a 39, llama a la API
 useEffect(() => {
@@ -127,7 +112,6 @@ useEffect(() => {
       projectName: selectedProject.nombre,
       assignedToEmails: usuariosAsignados.map((item) => item.email),
       assignedToNames: usuariosAsignados.map((item) => item.name),
-      assignedToNames: asignados.map((u) => u.nombre),
     });
 
     onClose();
