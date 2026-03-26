@@ -19,14 +19,20 @@ Proyecto desarrollado para la materia de **Diseño y Programación de Software M
 
   # **Requisitos previos:** 
   Asegúrate de tener lo siguiente instalado en tu equipo:
+  
     * **Node.js** (versión 18 o superior)
+    
     * **npm** (versión 8 o superior)
+    
     * **Git**
+    
     * Editor de Código (se recomienda **VS Code**)
+    
     * Clonar el link del repositorio
     
   # **Instalar depedencias necesarias:**
   Verificar e instalar todas las dependencias del proyecto incluyendo Jsonserver y concurrently con
+    
     * **npm install** 
     
   # **Ejecutar la aplicación**
