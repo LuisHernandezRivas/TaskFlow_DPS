@@ -27,19 +27,21 @@ Proyecto desarrollado para la materia de **Diseño y Programación de Software M
     
   # **Instalar depedencias necesarias:**
   Verificar e instalar todas las dependencias del proyecto incluyendo Jsonserver y concurrently con
-    **npm install** 
+    * **npm install** 
     
   # **Ejecutar la aplicación**
   
   **Opción a)** 
   Levantar todos los servicios en un solo comando:
-  **npm run dev:full**
+  * **npm run dev:full**
   
   **Opcion b)** 
   Levantar los servicios por terminales separadas:
+  
   ---Terminal 1
-  **npm run api**
+  * **npm run api**
+  
   ---Terminal 2
-  **npm run dev**
+  * **npm run dev**
 
   
